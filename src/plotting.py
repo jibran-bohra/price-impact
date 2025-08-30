@@ -1,16 +1,20 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
+import pandas as pd
+from src.impact_models import LinearOWModel, NonlinearAFSModel
 
 # Set plotting style
 plt.style.use("seaborn-v0_8-darkgrid")
 sns.set_palette("husl")
 plt.rcParams["figure.dpi"] = 300
 plt.rcParams["savefig.dpi"] = 300
-plt.rcParams["savefig.bbox"] = "tight"
+# Avoid globally forcing tight bounding boxes on saved figures, which can
+# unintentionally crop width and make multi-plot figures look portrait/upright.
+plt.rcParams["savefig.bbox"] = "standard"
 
 
-def plot_exploratory_data_analysis(analysis_data, data, output_dir):
+def plot_exploratory_data_analysis(data: pd.DataFrame, output_dir: str):
     """
     Generates and saves exploratory data analysis plots.
     - Distribution of Signed Volume
@@ -23,11 +27,11 @@ def plot_exploratory_data_analysis(analysis_data, data, output_dir):
     fig.suptitle("Exploratory Data Analysis", fontsize=16)
 
     # Distribution of Signed Volume
-    ax1 = axes[0, 0]
+    ax1: plt.Axes = axes[0, 0]
     signed_vol_clipped = np.clip(
-        analysis_data["signed_volume"],
-        analysis_data["signed_volume"].quantile(0.01),
-        analysis_data["signed_volume"].quantile(0.99),
+        data["signed_volume"],
+        data["signed_volume"].quantile(0.01),
+        data["signed_volume"].quantile(0.99),
     )
     ax1.hist(signed_vol_clipped, bins=50, edgecolor="black", alpha=0.7)
     ax1.set_xlabel("Signed Volume (clipped at 1% and 99% quantiles)")
@@ -35,11 +39,11 @@ def plot_exploratory_data_analysis(analysis_data, data, output_dir):
     ax1.set_title("Distribution of Signed Volume")
 
     # Price changes distribution
-    ax2 = axes[0, 1]
+    ax2: plt.Axes = axes[0, 1]
     price_changes_clipped = np.clip(
-        analysis_data["price_change"],
-        analysis_data["price_change"].quantile(0.01),
-        analysis_data["price_change"].quantile(0.99),
+        data["price_change"],
+        data["price_change"].quantile(0.01),
+        data["price_change"].quantile(0.99),
     )
     ax2.hist(
         price_changes_clipped, bins=50, edgecolor="black", alpha=0.7, color="orange"
@@ -49,8 +53,8 @@ def plot_exploratory_data_analysis(analysis_data, data, output_dir):
     ax2.set_title("Distribution of Price Changes")
 
     # Scatter plot: Signed Volume vs Price Change
-    ax3 = axes[1, 0]
-    sample_data = analysis_data.sample(min(5000, len(analysis_data)))
+    ax3: plt.Axes = axes[1, 0]
+    sample_data = data.sample(min(5000, len(data)))
     ax3.scatter(
         sample_data["signed_volume"], sample_data["price_change"], alpha=0.3, s=10
     )
@@ -58,16 +62,16 @@ def plot_exploratory_data_analysis(analysis_data, data, output_dir):
     ax3.set_ylabel("Price Change")
     ax3.set_title("Signed Volume vs Price Change (sample)")
     ax3.set_xlim(
-        analysis_data["signed_volume"].quantile(0.01),
-        analysis_data["signed_volume"].quantile(0.99),
+        data["signed_volume"].quantile(0.01),
+        data["signed_volume"].quantile(0.99),
     )
     ax3.set_ylim(
-        analysis_data["price_change"].quantile(0.01),
-        analysis_data["price_change"].quantile(0.99),
+        data["price_change"].quantile(0.01),
+        data["price_change"].quantile(0.99),
     )
 
     # Time series of mid price
-    ax4 = axes[1, 1]
+    ax4: plt.Axes = axes[1, 1]
     ax4.plot(data["ts_event"], data["mid_price"], linewidth=0.5)
     ax4.set_xlabel("Time")
     ax4.set_ylabel("Mid Price")
@@ -79,7 +83,12 @@ def plot_exploratory_data_analysis(analysis_data, data, output_dir):
     plt.close()
 
 
-def plot_model_comparison(ow_model, afs_model, data, output_dir):
+def plot_model_comparison(
+    ow_model: LinearOWModel,
+    afs_model: NonlinearAFSModel,
+    data: pd.DataFrame,
+    output_dir: str,
+):
     """
     Generates and saves a comparison plot of the Linear OW and Nonlinear AFS models.
     """
@@ -128,7 +137,12 @@ def plot_model_comparison(ow_model, afs_model, data, output_dir):
     plt.close()
 
 
-def plot_detailed_analysis(ow_model, afs_model, analysis_data, output_dir):
+def plot_detailed_analysis(
+    ow_model: LinearOWModel,
+    afs_model: NonlinearAFSModel,
+    data: pd.DataFrame,
+    output_dir: str,
+):
     """
     Generates and saves detailed analysis plots for price impact models.
     - Impact curves with actual data overlay
@@ -140,34 +154,64 @@ def plot_detailed_analysis(ow_model, afs_model, analysis_data, output_dir):
     fig, axes = plt.subplots(2, 2, figsize=(15, 12))
     fig.suptitle("Detailed Price Impact Analysis", fontsize=16)
 
-    volume_min = analysis_data["signed_volume"].quantile(0.05)
-    volume_max = analysis_data["signed_volume"].quantile(0.95)
+    volume_min = data["signed_volume"].quantile(0.05)
+    volume_max = data["signed_volume"].quantile(0.95)
     volumes = np.linspace(volume_min, volume_max, 1000)
     ow_impacts_bps = ow_model.calculate_impact(volumes) * 10000
     afs_impacts_bps = afs_model.calculate_impact(volumes) * 10000
 
-    # Impact curves with actual data overlay
-    ax1 = axes[0, 0]
+    # Impact curves with actual data density (hexbin) overlay
+    ax1: plt.Axes = axes[0, 0]
+    y_bps = data["price_change"] * 10000
+    y_limits = np.percentile(y_bps, [10, 90])
+    hb = ax1.hexbin(
+        data["signed_volume"],
+        y_bps,
+        gridsize=60,
+        cmap="Greys",
+        mincnt=1,
+        extent=[
+            float(volume_min),
+            float(volume_max),
+            float(y_limits[0]),
+            float(y_limits[1]),
+        ],
+        alpha=0.8,
+        linewidths=0,
+    )
+    cb = plt.colorbar(hb, ax=ax1)
+    cb.set_label("Count")
+    # Add a sparse scatter overlay for individual observations
+    if len(data) > 0:
+        sample = data.sample(min(3000, len(data))).copy()
+        sample_y_bps = sample["price_change"] * 10000
+        scatter_mask = (
+            (sample["signed_volume"] >= volume_min)
+            & (sample["signed_volume"] <= volume_max)
+            & (sample_y_bps >= y_limits[0])
+            & (sample_y_bps <= y_limits[1])
+        )
+        if scatter_mask.any():
+            ax1.scatter(
+                sample.loc[scatter_mask, "signed_volume"],
+                sample_y_bps[scatter_mask],
+                s=4,
+                alpha=0.15,
+                c="black",
+                linewidths=0,
+                label="Actual Data (sample)",
+            )
     ax1.plot(volumes, ow_impacts_bps, "b-", linewidth=2, label="Linear OW Model")
     ax1.plot(volumes, afs_impacts_bps, "r-", linewidth=2, label="Nonlinear AFS Model")
-    sample = analysis_data.sample(min(1000, len(analysis_data)))
-    ax1.scatter(
-        sample["signed_volume"],
-        sample["price_change"] * 10000,
-        alpha=0.2,
-        s=5,
-        c="gray",
-        label="Actual Data",
-    )
     ax1.set_xlabel("signed_volume")
     ax1.set_ylabel("Price Impact (bps)")
-    ax1.set_title("Model Predictions vs Actual Data")
+    ax1.set_title("Model Predictions vs Actual Data (density)")
     ax1.legend()
     ax1.set_xlim(volume_min, volume_max)
-    ax1.set_ylim(np.percentile(sample["price_change"] * 10000, [1, 99]))
+    ax1.set_ylim(y_limits)
 
     # Nonlinearity visualization
-    ax2 = axes[0, 1]
+    ax2: plt.Axes = axes[0, 1]
     nonlinearity = afs_impacts_bps - ow_impacts_bps
     ax2.plot(volumes, nonlinearity, "g-", linewidth=2)
     ax2.fill_between(volumes, 0, nonlinearity, alpha=0.3, color="green")
@@ -178,8 +222,8 @@ def plot_detailed_analysis(ow_model, afs_model, analysis_data, output_dir):
     ax2.axhline(y=0, color="k", linestyle="--", alpha=0.5)
 
     # Impact distribution for typical volumes
-    ax3 = axes[1, 0]
-    typical_volumes = analysis_data["signed_volume"].values
+    ax3: plt.Axes = axes[1, 0]
+    typical_volumes = data["signed_volume"].values
     typical_volumes_filtered = typical_volumes[
         (typical_volumes > np.percentile(typical_volumes, 5))
         & (typical_volumes < np.percentile(typical_volumes, 95))
@@ -195,7 +239,7 @@ def plot_detailed_analysis(ow_model, afs_model, analysis_data, output_dir):
     ax3.legend()
 
     # Model comparison metrics
-    ax4 = axes[1, 1]
+    ax4: plt.Axes = axes[1, 1]
     ax4.axis("off")
     metrics_text = f"""Model Comparison Metrics:
 
@@ -205,7 +249,6 @@ Linear OW Model:
   - N samples: {ow_model.parameters["n_samples"]:,}
 
 Nonlinear AFS Model:
-  - Lambda: {afs_model.parameters["lambda"]:.2e}
   - Eta: {afs_model.parameters["eta"]:.2e}
   - Delta: {afs_model.parameters["delta"]}
   - R-squared: {afs_model.parameters["r_squared"]:.4f}
@@ -228,7 +271,12 @@ Improvement in R²: {((afs_model.parameters["r_squared"] - ow_model.parameters["
     plt.close()
 
 
-def plot_3d_impact_surfaces(ow_model, afs_model, data, output_dir):
+def plot_3d_impact_surfaces(
+    ow_model: LinearOWModel,
+    afs_model: NonlinearAFSModel,
+    data: pd.DataFrame,
+    output_dir: str,
+):
     """
     Generates and saves 3D surface plots of the price impact for both models.
     """
@@ -279,17 +327,20 @@ def plot_3d_impact_surfaces(ow_model, afs_model, data, output_dir):
     plt.close()
 
 
-def plot_volume_bucket_analysis(ow_model, afs_model, analysis_data, output_dir):
+def plot_volume_bucket_analysis(
+    ow_model: LinearOWModel,
+    afs_model: NonlinearAFSModel,
+    data: pd.DataFrame,
+    output_dir: str,
+):
     """
     Generates and saves a bar plot comparing model impacts across volume buckets.
     """
     print("Generating volume bucket analysis...")
-    fig, ax = plt.subplots(1, 1, figsize=(12, 8))
+    _, ax = plt.subplots(1, 1, figsize=(12, 8))
 
     # Define volume buckets
-    volume_buckets = np.percentile(
-        analysis_data["signed_volume"], np.linspace(10, 90, 9)
-    )
+    volume_buckets = np.percentile(data["signed_volume"], np.linspace(10, 90, 9))
     bucket_centers = (volume_buckets[:-1] + volume_buckets[1:]) / 2
 
     # Calculate average impacts

@@ -8,7 +8,6 @@ This module implements:
 Based on "Efficient Trading with Price Impact" paper
 """
 
-import warnings
 from abc import ABC, abstractmethod
 from typing import Tuple, Union
 
@@ -140,18 +139,16 @@ class NonlinearAFSModel(BaseImpactModel):
     """
     Nonlinear Almgren-Fruth-Schied (AFS) Model
 
-    Price impact has both linear and nonlinear components:
-    Δp = λ * OI + η * sign(OI) * |OI|^δ
+    Price impact follows a pure nonlinear power law:
+    Δp = η * sign(OI) * |OI|^δ
 
     where:
-    - λ is the linear impact coefficient
     - η is the nonlinear impact coefficient
     - δ is the power law exponent (typically between 0.5 and 1)
     """
 
     def __init__(self, delta: float = 0.5):
         super().__init__("Nonlinear AFS Model")
-        self.lambda_ = None  # Linear coefficient
         self.eta_ = None  # Nonlinear coefficient
         self.delta = delta  # Power law exponent
 
@@ -178,15 +175,12 @@ class NonlinearAFSModel(BaseImpactModel):
         # Normalize by time
         normalized_volume = volume / np.sqrt(time_interval)
 
-        # Nonlinear impact: Δp = λ*v + η*sign(v)*|v|^δ
-        linear_impact = self.lambda_ * normalized_volume
-        nonlinear_impact = (
+        # Nonlinear impact: Δp = η*sign(v)*|v|^δ
+        return (
             self.eta_
             * np.sign(normalized_volume)
             * np.abs(normalized_volume) ** self.delta
         )
-
-        return linear_impact + nonlinear_impact
 
     def fit(self, data: pd.DataFrame) -> "NonlinearAFSModel":
         """
@@ -216,34 +210,23 @@ class NonlinearAFSModel(BaseImpactModel):
         mask = np.abs(y - np.mean(y)) < 3 * np.std(y)
         X, y = X[mask], y[mask]
 
-        # Create design matrix for nonlinear regression
-        # [X, sign(X)*|X|^delta]
-        X_linear = X
-        X_nonlinear = np.sign(X) * np.abs(X) ** self.delta
+        # Nonlinear regressor: Z = sign(X) * |X|^delta
+        Z = np.sign(X) * np.abs(X) ** self.delta
 
-        # Stack features
-        X_design = np.column_stack([X_linear, X_nonlinear])
-
-        # OLS: coeffs = (X'X)^(-1) X'y
-        try:
-            coeffs = np.linalg.lstsq(X_design, y, rcond=None)[0]
-            self.lambda_ = coeffs[0]
-            self.eta_ = coeffs[1]
-        except np.linalg.LinAlgError:
-            warnings.warn(
-                "Singular matrix in nonlinear fit, falling back to linear model"
-            )
-            self.lambda_ = np.dot(X, y) / np.dot(X, X)
+        # Closed-form OLS for single parameter η
+        zTz = float(np.dot(Z, Z))
+        if zTz == 0.0:
             self.eta_ = 0.0
+        else:
+            self.eta_ = float(np.dot(Z, y) / zTz)
 
         # Calculate R-squared
-        y_pred = self.lambda_ * X_linear + self.eta_ * X_nonlinear
+        y_pred = self.eta_ * Z
         ss_res = np.sum((y - y_pred) ** 2)
         ss_tot = np.sum((y - np.mean(y)) ** 2)
         r_squared = 1 - ss_res / ss_tot if ss_tot > 0 else 0
 
         self.parameters = {
-            "lambda": self.lambda_,
             "eta": self.eta_,
             "delta": self.delta,
             "n_samples": len(X),
@@ -252,7 +235,7 @@ class NonlinearAFSModel(BaseImpactModel):
 
         self.is_fitted = True
         print(
-            f"Fitted {self.name}: λ = {self.lambda_:.6f}, η = {self.eta_:.6f}, R² = {self.parameters['r_squared']:.4f}"
+            f"Fitted {self.name}: η = {self.eta_:.6f}, R² = {self.parameters['r_squared']:.4f}"
         )
 
         return self

@@ -1,0 +1,41 @@
+\relax 
+\providecommand\hyper@newdestlabel[2]{}
+\providecommand\HyperFirstAtBeginDocument{\AtBeginDocument}
+\HyperFirstAtBeginDocument{\ifx\hyper@anchor\@undefined
+\global\let\oldnewlabel\newlabel
+\gdef\newlabel#1#2{\newlabelxx{#1}#2}
+\gdef\newlabelxx#1#2#3#4#5#6{\oldnewlabel{#1}{{#2}{#3}}}
+\AtEndDocument{\ifx\hyper@anchor\@undefined
+\let\newlabel\oldnewlabel
+\fi}
+\fi}
+\global\let\hyper@last\relax 
+\gdef\HyperFirstAtBeginDocument#1{#1}
+\providecommand\HyField@AuxAddToFields[1]{}
+\providecommand\HyField@AuxAddToCoFields[2]{}
+\@writefile{toc}{\contentsline {section}{\numberline {1}Price Impact}{1}{section.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {1.1}Data}{1}{subsection.1.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {1.1.1}Source and Sample}{1}{subsubsection.1.1.1}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces First 5 rows of merged\_data.csv}}{1}{table.1}\protected@file@percent }
+\newlabel{tab:first5_merged_data}{{1}{1}{First 5 rows of merged\_data.csv}{table.1}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {1.1.2}Preprocessing}{1}{subsubsection.1.1.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {1.1.3}Exploratory Data Analysis}{2}{subsubsection.1.1.3}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces Exploratory Data Analysis. Distributions of signed volume and price changes (clipped to 1\%--99\% quantiles) reveal heavy tails and a zero-centered return distribution; a 5{,}000-point sample scatter of $v$ vs. $\Delta p$ shows a weak but positive association; the mid-price series provides context for intraday dynamics.}}{2}{figure.1}\protected@file@percent }
+\newlabel{fig:eda}{{1}{2}{Exploratory Data Analysis. Distributions of signed volume and price changes (clipped to 1\%--99\% quantiles) reveal heavy tails and a zero-centered return distribution; a 5{,}000-point sample scatter of $v$ vs. $\Delta p$ shows a weak but positive association; the mid-price series provides context for intraday dynamics}{figure.1}{}}
+\@writefile{toc}{\contentsline {paragraph}{Discussion.}{2}{section*.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {1.2}Models}{2}{subsection.1.2}\protected@file@percent }
+\newlabel{eq:ow}{{5}{2}{Models}{equation.1.5}{}}
+\newlabel{eq:afs}{{6}{3}{Models}{equation.1.6}{}}
+\@writefile{toc}{\contentsline {paragraph}{Linear OW fit.}{3}{section*.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Nonlinear AFS fit.}{3}{section*.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {1.3}Model Comparison and Visualization}{3}{subsection.1.3}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Detailed analysis. Top-left: model curves overlaid on a hexbin density of observed $\Delta p$ vs. $v$; banding reflects tick-size quantization. Top-right: the nonlinear component (AFS minus OW) highlights concavity. Bottom-left: predicted impact distributions at typical volumes. Bottom-right: fit metrics and parameter estimates.}}{4}{figure.2}\protected@file@percent }
+\newlabel{fig:detailed}{{2}{4}{Detailed analysis. Top-left: model curves overlaid on a hexbin density of observed $\Delta p$ vs. $v$; banding reflects tick-size quantization. Top-right: the nonlinear component (AFS minus OW) highlights concavity. Bottom-left: predicted impact distributions at typical volumes. Bottom-right: fit metrics and parameter estimates}{figure.2}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces Model parameter estimates and goodness-of-fit}}{4}{table.2}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces 3D impact surfaces across volume and time. OW is planar in $v$ with $1/\sqrt  {\Delta t}$ scaling; AFS adds curvature in $v$ consistent with concavity. Longer execution times reduce impact under both models, visualizing the time-normalization used in Eqs.\nobreakspace  {}\eqref  {eq:ow}--\eqref  {eq:afs}.}}{5}{figure.3}\protected@file@percent }
+\newlabel{fig:3d_surfaces}{{3}{5}{3D impact surfaces across volume and time. OW is planar in $v$ with $1/\sqrt {\Delta t}$ scaling; AFS adds curvature in $v$ consistent with concavity. Longer execution times reduce impact under both models, visualizing the time-normalization used in Eqs.~\eqref {eq:ow}--\eqref {eq:afs}}{figure.3}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Volume bucket analysis (10th–80th percentiles). Average predicted impact by bucket shows a consistent gap between OW and AFS, indicating that nonlinear effects matter across typical trading sizes, not only at extremes.}}{6}{figure.4}\protected@file@percent }
+\newlabel{fig:buckets}{{4}{6}{Volume bucket analysis (10th–80th percentiles). Average predicted impact by bucket shows a consistent gap between OW and AFS, indicating that nonlinear effects matter across typical trading sizes, not only at extremes}{figure.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {1.4}Conclusion}{6}{subsection.1.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {2}References}{6}{section.2}\protected@file@percent }
+\gdef \@abspage@last{7}

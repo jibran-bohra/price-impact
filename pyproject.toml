@@ -9,6 +9,11 @@ dependencies = [
   "numpy>=1.25,<2",
   "matplotlib>=3.7,<4",
   "seaborn>=0.13,<0.14",
+  "pdfminer-six>=20250506",
+  "pypdf>=6.0.0",
+  "pymupdf>=1.26.4",
+  "pytesseract>=0.3.13",
+  "pillow>=11.3.0",
 ]
 
 [build-system]

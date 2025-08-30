@@ -63,7 +63,7 @@ Generated figures are written to `report/figures/`:
 - `04_3d_impact_surfaces.png`
 - `05_volume_bucket_analysis.png`
 
-### Project layout
+### Code organization
 
 - `scripts/visualize_price_impact_models.py`: entry-point to fit models and save plots
 - `src/impact_models.py`: OW and AFS model implementations

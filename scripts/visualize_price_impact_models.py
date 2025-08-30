@@ -29,6 +29,7 @@ if __name__ == "__main__":
     _project_root = os.path.abspath(os.path.join(_this_dir, ".."))
     _data_path = os.path.join(_project_root, "data", "merged_data.csv")
     data = load_data(_data_path)
+    data["ts_event"] = pd.to_datetime(data["ts_event"])
 
     linear_ow_model = LinearOWModel()
     nonlinear_afs_model = NonlinearAFSModel(delta=0.5)
@@ -49,12 +50,16 @@ if __name__ == "__main__":
     os.makedirs(output_dir, exist_ok=True)
 
     # Generate and save plots
-    plot_exploratory_data_analysis(analysis_data, data, output_dir)
-    plot_model_comparison(linear_ow_model, nonlinear_afs_model, data, output_dir)
+    plot_exploratory_data_analysis(analysis_data, output_dir)
+    plot_model_comparison(
+        linear_ow_model, nonlinear_afs_model, analysis_data, output_dir
+    )
     plot_detailed_analysis(
         linear_ow_model, nonlinear_afs_model, analysis_data, output_dir
     )
-    plot_3d_impact_surfaces(linear_ow_model, nonlinear_afs_model, data, output_dir)
+    plot_3d_impact_surfaces(
+        linear_ow_model, nonlinear_afs_model, analysis_data, output_dir
+    )
     plot_volume_bucket_analysis(
         linear_ow_model, nonlinear_afs_model, analysis_data, output_dir
     )
